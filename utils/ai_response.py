@@ -12,6 +12,7 @@ model_name = "gpt-4o-mini"
 def get_client():
     # Fetch token fresh each time to ensure it uses the cleaned version
     raw_token = os.getenv("GITHUB_TOKEN", "")
+    print("raw_token",raw_token)
     token = raw_token.strip().strip('"').strip("'")
     
     if not token:
