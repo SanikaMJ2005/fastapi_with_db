@@ -1,37 +1,56 @@
+import os
+import uvicorn
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import create_engine
+from dotenv import load_dotenv
+
+# --- CRITICAL: LOAD ENV FIRST ---
+load_dotenv() 
+
+# Import routes and local files AFTER loading env
 from routes.user_routes import router as user_router
 from routes.ai_response_routes import router as ai_response_router
 from routes.email_routes import router as email_router
-from db import get_db, DATABASE_URL
-from sqlalchemy import create_engine
+from db import DATABASE_URL
 from models import Base
-from fastapi.middleware.cors import CORSMiddleware
-import uvicorn
 
-app = FastAPI()
+# Initialize FastAPI app
+app = FastAPI(title="Project AI Backend")
 
-# Enable CORS so your React frontend (localhost:5173) can talk to this API
+# 1. DEBUG CHECK (Check your terminal when you save this!)
+token = os.getenv("GITHUB_TOKEN")
+if not token:
+    print("❌ ERROR: GITHUB_TOKEN is not being read from .env!")
+else:
+    # Prints the first few characters to verify it's the right one
+    print(f"✅ SUCCESS: GITHUB_TOKEN loaded (Starts with: {token[:7]}...)")
+
+# 2. Enable CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # In production, replace with ["http://localhost:5173"]
+    allow_origins=["*"], 
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Include your routers
+# 3. Database Table Creation
+engine = create_engine(DATABASE_URL)
+Base.metadata.create_all(bind=engine)
+
+# 4. Include Routers
 app.include_router(user_router)
 app.include_router(ai_response_router)
 app.include_router(email_router)
 
-# Create database tables on startup
-engine = create_engine(DATABASE_URL)
-Base.metadata.create_all(engine)
-
 @app.get("/")
 def read_root():
-    return {"status": "Server is running", "message": "Welcome to the Singnup API"}
+    return {
+        "status": "Server is online", 
+        "token_detected": True if token else False,
+        "message": "Welcome to the API"
+    }
 
 if __name__ == "__main__":
-    # Use "main:app" string format to allow reload to work properly
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
