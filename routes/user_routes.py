@@ -10,8 +10,8 @@ from utils.jwt_handler import create_tokens, verify_token
 router = APIRouter()
 
 
-@router.post("/signup")
-def signup(user: UserSchema, db: Session = Depends(get_db)):
+@router.post("/singnup")
+def singnup(user: UserSchema, db: Session = Depends(get_db)):
     user_repo = UserRepo(db)
     # Convert Pydantic schema to SQLAlchemy model
     existing_user = user_repo.get_user_by_email(user.email)
