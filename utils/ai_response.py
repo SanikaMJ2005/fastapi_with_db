@@ -10,13 +10,18 @@ endpoint = "https://models.github.ai/inference"
 model_name = "gpt-4o-mini"
 
 def get_client():
-    # Fetch token fresh each time to ensure it uses the cleaned version
-    raw_token = os.getenv("GITHUB_TOKEN", "")
-    print("raw_token",raw_token)
+    # Attempt to fetch GITHUB_TOKEN or sir_token safely
+    raw_token = os.getenv("GITHUB_TOKEN") or os.getenv("sir_token", "")
+    
+    if not raw_token:
+        print("❌ ERROR: No AI token found! Please set GITHUB_TOKEN or sir_token.")
+        return None
+
+    # Clean the token (remove whitespace and potential quotes)
     token = raw_token.strip().strip('"').strip("'")
     
     if not token:
-        print("❌ ERROR: GITHUB_TOKEN is empty in environment!")
+        print("❌ ERROR: AI token is empty in environment!")
         return None
         
     return ChatCompletionsClient(
